@@ -1,0 +1,6 @@
+apiVersion: oisp.net/v1alpha1
+kind: Oisp
+metadata:
+  name: example-oisp
+spec:
+

@@ -21,11 +21,6 @@ import (
 
 var log = logf.Log.WithName("controller_oisp")
 
-/**
-* USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
-* business logic.  Delete these comments after modifying this file.*
- */
-
 // Add creates a new Oisp Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
@@ -64,6 +59,20 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
+//scan for devices
+// brief: looks for all nodes which have a label oisp.net/device
+//        and then checks whether there is a bijection between these nodes and
+//        devices. The deviceId is given in annotation "oisp.net/deviceId"
+//        at the same time: disable all devices which cannot be assigned to
+//        active nodes
+func syncDevicesWithNodes(c client.Client) {
+	//c := mgr.GetClient()
+	node := &corev1.NodeList{}
+	_ = c.List(context.Background(), &client.ListOptions{}, node)
+	reqLogger := log.WithValues("values", node)
+	reqLogger.Info("Marcel:101")
+}
+
 // blank assignment to verify that ReconcileOisp implements reconcile.Reconciler
 var _ reconcile.Reconciler = &ReconcileOisp{}
 
@@ -83,9 +92,11 @@ type ReconcileOisp struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileOisp) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
+	reqLogger := log.WithValues("Marcel: Request.Namespace", request.Namespace, "Request.Name", request.Name, "request", request)
 	reqLogger.Info("Reconciling Oisp")
 
+	//scan all nodes with a specific label to investigate sync issues
+	go syncDevicesWithNodes(r.client)
 	// Fetch the Oisp instance
 	instance := &oispv1alpha1.Oisp{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
